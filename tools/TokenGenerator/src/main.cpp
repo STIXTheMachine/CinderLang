@@ -5,6 +5,9 @@
 #include <fstream>
 #include <filesystem>
 
+constexpr auto EnumStart = "enum class Token\n{\n";
+constexpr auto EnumEnd = "\n}\n";
+
 int main()
 {
     const std::filesystem::path InputFolder = "../../../spec";
@@ -24,4 +27,8 @@ int main()
 
     const std::filesystem::path OutputPath = OutputFolder / "Token.generated.h";
     std::ofstream OutputFile { OutputPath };
+
+    OutputFile << EnumStart;
+    OutputFile << "Hello, World!";
+    OutputFile << EnumEnd;
 }

@@ -1,0 +1,92 @@
+@Keyword
+fn
+return
+switch
+case
+if
+else
+loop
+break
+
+@Typename
+u8
+u16
+u32
+u64
+
+i8
+i16
+i32
+i64
+
+bool
+b8
+b16
+b32
+b64
+
+f16
+f32
+f64
+
+usize
+isize
+
+@Punctuation
+( LParen
+) RParen
+[ LBracket
+] RBracket
+{ LBrace
+} RBrace
+! Bang
+@ At
+# Pound
+$ Dollar
+% Percent
+^ Caret
+& Amp
+* Star
++ Plus
+- Minus
+= Equal
+/ ForwardSlash
+\ BackSlash
+| Pipe
+: Colon
+; Semicolon
+, Comma
+. Period
+? Question
+~ Tilde
+' SingleQuote
+" DoubleQuote
+< Less
+> Greater
+|| DoublePipe
+&& DoubleAmp
+== DoubleEqual
+++ DoublePlus
+-- DoubleMinus
+?? DoubleQuestion
+>> DoubleGreater
+<< DoubleLess
+!= BangEqual
+|= PipeEqual
+&= AmpEqual
+^= CaretEqual
++= PlusEqual
+-= MinusEqual
+*= StarEqual
+/= SlashEqual
+%= PercentEqual
+>>= DoubleGreaterEqual
+<<= DoubleLessEqual
+<= LessEqual
+>= GreaterEqual
+-> RArrow
+<- LArrow
+=> FatArrow
+.. DoublePeriod
+..= DoublePeriodEqual
+??= DoubleQuestionEqual
