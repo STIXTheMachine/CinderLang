@@ -1,36 +1,40 @@
 @Keyword
-fn
-return
-switch
-case
-if
-else
-loop
-break
+fn DefFunc
+proc DefProc
+return Return
+switch Switch
+case Case
+if If
+else Else
+loop Loop
+break Break
 
 @Typename
-u8
-u16
-u32
-u64
+u8 Unsigned8
+u16 Unsigned16
+u32 Unsigned32
+u64 Unsigned64
+u128 Unsigned128
 
-i8
-i16
-i32
-i64
+i8 Signed8
+i16 Signed16
+i32 Signed32
+i64 Signed64
+i128 Signed128
 
-bool
-b8
-b16
-b32
-b64
+bool Boolean
+b8 Bitfield8
+b16 Bitfield16
+b32 Bitfield32
+b64 Bitfield64
+b128 Bitfield128
 
-f16
-f32
-f64
+f16 FloatHalf
+f32 FloatSingle
+f64 FloatDouble
 
-usize
-isize
+usize UnsignedSize
+isize SignedSize
 
 @Punctuation
 ( LParen
@@ -53,7 +57,7 @@ $ Dollar
 / ForwardSlash
 \ BackSlash
 | Pipe
-: Colon
+ Colon
 ; Semicolon
 , Comma
 . Period
@@ -71,6 +75,7 @@ $ Dollar
 ?? DoubleQuestion
 >> DoubleGreater
 << DoubleLess
+: DoubleColon
 != BangEqual
 |= PipeEqual
 &= AmpEqual

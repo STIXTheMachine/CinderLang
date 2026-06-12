@@ -5,30 +5,33 @@
 #include <fstream>
 #include <filesystem>
 
-constexpr auto EnumStart = "enum class Token\n{\n";
-constexpr auto EnumEnd = "\n}\n";
+#include "EnumGenerator.hpp"
+
 
 int main()
 {
     const std::filesystem::path InputFolder = "../../../spec";
-    const std::filesystem::path InputFile = InputFolder / "tokens.def";
-    if (!exists(InputFile))
+    const std::filesystem::path InputFilePath = InputFolder / "tokens.def";
+    if (!exists(InputFilePath))
     {
         std::cerr << "tokens.def not found" << std::endl;
         return -1;
     }
 
-    const std::filesystem::path OutputFolder = "../../generated";
+    std::ifstream InputFile { InputFilePath };
 
+    const std::filesystem::path OutputFolder = "../../generated";
     if (!exists(OutputFolder))
     {
         std::filesystem::create_directory(OutputFolder);
     }
+    const std::filesystem::path OutputFilePath = OutputFolder / "Token.generated.h";
+    if (exists(OutputFilePath))
+    {
+        std::filesystem::remove(OutputFilePath);
+    }
+    std::ofstream OutputFile { OutputFilePath };
 
-    const std::filesystem::path OutputPath = OutputFolder / "Token.generated.h";
-    std::ofstream OutputFile { OutputPath };
-
-    OutputFile << EnumStart;
-    OutputFile << "Hello, World!";
-    OutputFile << EnumEnd;
+    EnumGenerator EnumGenerator { InputFile, OutputFile };
+    EnumGenerator.Generate();
 }
