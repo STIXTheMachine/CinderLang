@@ -9,7 +9,7 @@
 #include "Utils.hpp"
 
 constexpr auto EnumStart = "enum class TokenType\n{";
-constexpr auto EnumEnd = "\n}\n";
+constexpr auto EnumEnd = "\n};\n";
 
 void EnumGenerator::Generate()
 {
@@ -38,9 +38,9 @@ void EnumGenerator::Generate()
             continue;
         }
 
-        std::vector<std::string_view> Blah = Utils::Split(Line, ' ');
-        std::string_view Lexeme = Blah[0];
-        std::string_view Name = Blah[1];
+        std::vector<std::string_view> Fields = Utils::Split(Line, ' ');
+        std::string_view Lexeme = Fields[0];
+        std::string_view Name = Fields[1];
 
         OutputFile << "\n\t" << Prefix << Name << ',';
     }

@@ -16,11 +16,19 @@ file(
         ${SRC_DIR}/*.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIR})
 
-#add_custom_command(
-#        TARGET ${PROJECT_NAME}
-#        PRE_BUILD
-#        COMMAND $<TARGET_FILE:CinderTokGen>
-#)
+set(GENERATED_TOKENS ${CMAKE_CURRENT_BINARY_DIR}/generated/Token.generated.hpp)
+add_custom_command(
+        OUTPUT ${GENERATED_TOKENS}
+        COMMAND tools/TokenGenerator/CinderTokGen.exe
+        DEPENDS tools/TokenGenerator/CinderTokGen.exe
+        VERBATIM
+)
+
+add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+target_sources(${PROJECT_NAME} PRIVATE ${GENERATED_TOKENS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/generated)
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE stdc++exp)
+endif()
