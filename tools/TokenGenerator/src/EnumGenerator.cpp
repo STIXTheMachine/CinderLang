@@ -11,13 +11,6 @@
 constexpr auto EnumStart = "enum class TokenType\n{";
 constexpr auto EnumEnd = "\n}\n";
 
-EnumGenerator::EnumGenerator(std::ifstream& InputFile, std::ofstream& OutputFile)
-    : InputFile(InputFile), OutputFile(OutputFile)
-{
-
-}
-
-
 void EnumGenerator::Generate()
 {
     OutputFile << EnumStart;

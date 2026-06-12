@@ -5,7 +5,7 @@
 #pragma once
 #include "GeneratorBase.hpp"
 
-struct EnumGenerator : GeneratorBase
+struct LexemeStringGenerator : public GeneratorBase
 {
     using GeneratorBase::GeneratorBase;
     void Generate() override;

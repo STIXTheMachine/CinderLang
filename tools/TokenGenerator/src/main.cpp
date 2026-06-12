@@ -4,7 +4,6 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-
 #include "EnumGenerator.hpp"
 
 
@@ -25,6 +24,7 @@ int main()
     {
         std::filesystem::create_directory(OutputFolder);
     }
+
     const std::filesystem::path OutputFilePath = OutputFolder / "Token.generated.h";
     if (exists(OutputFilePath))
     {
