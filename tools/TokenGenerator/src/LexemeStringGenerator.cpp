@@ -12,8 +12,7 @@ static constexpr auto DeclarationFormatString = R"_Decl(static inline constexpr 
 
 void LexemeStringGenerator::Generate()
 {
-    InputFile.clear();
-    InputFile.seekg(0, std::ios::beg);
+    ResetInputFile();
 
     const std::string Contents { std::istreambuf_iterator { InputFile }, {} };
     if (Contents.empty())

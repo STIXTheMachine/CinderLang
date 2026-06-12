@@ -7,6 +7,7 @@ case Case
 if If
 else Else
 loop Loop
+continue Continue
 break Break
 
 @Typename

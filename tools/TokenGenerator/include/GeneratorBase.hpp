@@ -15,4 +15,6 @@ struct GeneratorBase
 protected:
     std::ifstream& InputFile;
     std::ofstream& OutputFile;
+
+    void ResetInputFile() const;
 };

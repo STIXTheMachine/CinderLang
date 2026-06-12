@@ -3,3 +3,9 @@
 //
 
 #include "GeneratorBase.hpp"
+
+void GeneratorBase::ResetInputFile() const
+{
+    InputFile.clear();
+    InputFile.seekg(0, std::ios::beg);
+}

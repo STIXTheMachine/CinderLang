@@ -13,11 +13,16 @@ constexpr auto EnumEnd = "\n};\n";
 
 void EnumGenerator::Generate()
 {
+    ResetInputFile();
+
     OutputFile << EnumStart;
+
+    OutputFile << "\n\tSpecial_None,";
+    OutputFile << "\n\tSpecial_EOF,";
 
     const std::string InputString { std::istreambuf_iterator { InputFile }, {} };
 
-    std::string Prefix = "";
+    std::string Prefix;
     for (auto Line : Utils::Split(InputString, '\n'))
     {
         if (Line.empty())
@@ -33,6 +38,7 @@ void EnumGenerator::Generate()
                 const auto Idx = Line.find(' ');
                 const auto End = Idx == std::string_view::npos ? Line.cend() : Line.cbegin() + Idx;
                 Prefix = std::string { Line.cbegin() + 1,  End } + '_';
+                OutputFile << '\n';
             }
 
             continue;

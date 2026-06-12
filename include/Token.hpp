@@ -10,6 +10,7 @@
 
 class Token
 {
+    TokenType Type = TokenType::Special_None;
     size_t Line   = 0;
     size_t Column = 0;
     size_t Length = 0;

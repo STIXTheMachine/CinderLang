@@ -21,7 +21,7 @@ set(GENERATED_TOKENS ${CMAKE_CURRENT_BINARY_DIR}/generated/Token.generated.hpp)
 add_custom_command(
         OUTPUT ${GENERATED_TOKENS}
         COMMAND tools/TokenGenerator/CinderTokGen.exe ../spec/tokens.def ./generated/Token.generated.hpp
-        DEPENDS tools/TokenGenerator/CinderTokGen.exe
+        DEPENDS tools/TokenGenerator/CinderTokGen.exe ../spec/tokens.def
         VERBATIM
 )
 
