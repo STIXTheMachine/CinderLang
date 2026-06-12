@@ -8,29 +8,37 @@
 #include "EnumGenerator.hpp"
 #include "LexemeStringGenerator.hpp"
 
-
-int main()
+int main(int argc, char* argv[])
 {
     std::println("\n================ [CinderTokGen] Generating Tokens... ================");
 
-    const std::filesystem::path InputFolder = "../spec";
-    const std::filesystem::path InputFilePath = InputFolder / "tokens.def";
+    if (argc < 3)
+    {
+        std::println("Please specify both the input and output filepaths.");
+        return -1;
+    }
+
+    const std::filesystem::path InputFilePath { argv[1] };
+
     if (!exists(InputFilePath))
     {
         std::println(std::cerr, "{} not found", weakly_canonical(InputFilePath).string());
         return -1;
     }
 
+    std::println(std::cerr, "Generating tokens from {}...", weakly_canonical(InputFilePath).string());
+
+
     std::ifstream InputFile { InputFilePath };
 
-    const std::filesystem::path OutputFolder = "./generated";
-    if (!exists(OutputFolder))
+    const std::filesystem::path OutputFilePath { argv[2] };
+    if (!exists(OutputFilePath))
     {
-        std::filesystem::create_directory(OutputFolder);
+        std::filesystem::create_directories(OutputFilePath.parent_path());
     }
 
-    const std::filesystem::path OutputFilePath = OutputFolder / "Token.generated.hpp";
     std::println("Output: {}", weakly_canonical(OutputFilePath).string());
+
     if (exists(OutputFilePath))
     {
         std::filesystem::remove(OutputFilePath);
