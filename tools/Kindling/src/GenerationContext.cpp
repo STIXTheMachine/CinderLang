@@ -7,112 +7,68 @@
 #include "ErrorHandling.hpp"
 #include <fstream>
 #include <algorithm>
+#include <iostream>
 
-GenerationContext& GenerationContext::AddDependency(EDependencyType Type, std::string Name)
+
+
+GenerationContext& GenerationContext::AddDependency(const Dependency& InDependency)
 {
-    std::string Header;
-    Header.reserve(32);
-    Header = "#include ";
-
-    switch(Type)
+    if (!std::ranges::contains(Dependencies, InDependency))
     {
-        case EDependencyType::System:
-            Header += '<' + Name + '>';
-            break;
-        case EDependencyType::Local:
-            Header += '"' + Name + '"';
-            break;
-    }
-
-    if (!std::ranges::contains(Dependencies, Header))
-    {
-        Dependencies.emplace_back(std::move(Header));
+        Dependencies.push_back(InDependency);
     }
 
     return *this;
 }
 
-GenerationContext& GenerationContext::Indent()
+GenerationContext& GenerationContext::AddDependencies(const std::span<const Dependency> Deps)
 {
-    IndentLevel += 1;
-    return *this;
-}
-GenerationContext& GenerationContext::Dedent()
-{
-    IndentLevel -= IndentLevel == 0 ? 0 : 1;
-    return *this;
-}
-
-GenerationContext& GenerationContext::AddLine(const std::string_view Line)
-{
-    FileContentBuffer << '\n';
-    for (auto Idx = 0; Idx < IndentLevel; ++Idx)
+    for (auto& Dep : Deps)
     {
-        FileContentBuffer << '\t';
+        AddDependency(Dep);
     }
-    FileContentBuffer << Line;
     return *this;
 }
 
-GenerationContext& GenerationContext::AddLine()
+GenerationContext& GenerationContext::AddDependencies(const std::initializer_list<Dependency> Deps)
 {
-    FileContentBuffer << '\n';
+    for (auto& Dep : Deps)
+    {
+        AddDependency(Dep);
+    }
     return *this;
 }
 
-Result<void> GenerationContext::LoadInputFile()
+Result<void> GenerationContext::LoadInputFile(const std::filesystem::path& InputFilePath)
 {
-    if (!exists(InputFilePath))
-    {
-       FAIL(std::format("Failed to open file {}", weakly_canonical(InputFilePath).string()));
-    }
-
-    InputFileContents = Utils::ReadFileToString(InputFilePath);
-    InputFileLines = Utils::Split(InputFileContents, '\n');
-    return {};
-}
-
-void GenerationContext::GenerateHeaders() {
-    OutputFileStream << "#pragma once\n";
-
-    for (const auto& Dependency : Dependencies)
-    {
-        OutputFileStream << Dependency << '\n';
-    }
-}
-
-void GenerationContext::WriteContentsToFile()
-{
-    OutputFileStream << FileContentBuffer.str();
+    Input.Reset();
+    return Input.Load(InputFilePath);
 }
 
 Result<void> GenerationContext::Commit()
 {
-    TRY_ASSIGN(OutputFileStream, TryCreateOutputStream());
-
-    GenerateHeaders();
-    WriteContentsToFile();
-
-    return {};
+    ResolveDependencies();
+    return Output.WriteToFile();
 }
 
-Result<std::ofstream> GenerationContext::TryCreateOutputStream() const
+void GenerationContext::ResolveDependencies()
 {
-    std::error_code ErrorCode;
-    if (exists(OutputFilePath))
+    Output.AddPreambleLine("#pragma once\n");
+    std::ranges::sort(Dependencies);
+    std::string Include;
+
+    for (const auto& Dependency : Dependencies)
     {
-        std::filesystem::remove(OutputFilePath, ErrorCode);
-        if (ErrorCode)
+        switch (Dependency.Type)
         {
-            FAIL(std::format("Failed to generate file {}: {}", weakly_canonical(OutputFilePath).string(), ErrorCode.message()));
+            case Dependency::Type::System:
+                Include = format("#include <{}>", Dependency.Name);
+                break;
+            case Dependency::Type::Local:
+                Include = format("#include \"{}\"", Dependency.Name);
+                break;
         }
-    }
 
-    std::filesystem::create_directories(OutputFilePath.parent_path(), ErrorCode);
-    if (ErrorCode)
-    {
-        FAIL(std::format("Failed to generate file {}: {}", weakly_canonical(OutputFilePath).string(), ErrorCode.message()));
+        Output.AddPreambleLine(Include);
     }
-
-    return std::ofstream { OutputFilePath, std::ios::trunc };
 }

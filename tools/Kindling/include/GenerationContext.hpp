@@ -4,38 +4,35 @@
 
 #pragma once
 #include "ErrorHandling.hpp"
+#include "InputFile.hpp"
+#include "OutputFile.hpp"
 #include <filesystem>
 #include <fstream>
 #include <sstream>
-#include <string>
 #include <vector>
 
+struct Dependency
+{
+    enum class Type { System, Local };
 
-enum class EDependencyType { System, Local };
+    Type Type = Type::System;
+    std::string_view Name;
+    auto operator<=>(const Dependency&) const = default;
+};
 
 struct GenerationContext
 {
-    GenerationContext& AddDependency(EDependencyType type, std::string Name);
-    GenerationContext& Indent();
-    GenerationContext& Dedent();
-    GenerationContext& AddLine(std::string_view Line);
-    GenerationContext& AddLine();
+    GenerationContext& AddDependency(const Dependency&);
+    GenerationContext& AddDependencies(std::span<const Dependency>);
+    GenerationContext& AddDependencies(std::initializer_list<Dependency>);
 
-    [[nodiscard]] Result<void> LoadInputFile();
+    InputFile Input {};
+    OutputFile Output {};
+
+    [[nodiscard]] Result<void> LoadInputFile(const std::filesystem::path&);
     [[nodiscard]] Result<void> Commit();
-
-    std::filesystem::path         InputFilePath {};
-    std::filesystem::path         OutputFilePath {};
-    std::string                   InputFileContents {};
-    std::vector<std::string_view> InputFileLines {};
-    std::ostringstream            FileContentBuffer {};
+    void ResolveDependencies();
 
 private:
-    [[nodiscard]] Result<std::ofstream> TryCreateOutputStream() const;
-    void GenerateHeaders();
-    void WriteContentsToFile();
-    uint32_t IndentLevel {};
-
-    std::ofstream OutputFileStream;
-    std::vector<std::string> Dependencies {};
+    std::vector<Dependency> Dependencies {};
 };

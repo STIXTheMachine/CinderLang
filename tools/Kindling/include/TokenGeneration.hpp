@@ -14,6 +14,8 @@ struct TokenGenerator
     [[nodiscard]] Result<void> Generate();
 
 private:
+    std::filesystem::path InputFilePath;
+    std::filesystem::path OutputFilePath;
 
     static constexpr auto EnumClassName = "ETokenType";
     static constexpr auto LexemeToTokenTableName = "LexemeToTokenType";

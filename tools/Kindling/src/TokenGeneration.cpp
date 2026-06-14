@@ -28,20 +28,19 @@ TokenGenerator::TokenGenerator(
     const std::filesystem::path& InputFilePath,
     const std::filesystem::path& OutputFilePath
 )
+    : InputFilePath(InputFilePath), OutputFilePath(OutputFilePath)
 {
-    Ctx.InputFilePath = InputFilePath;
-    Ctx.OutputFilePath = OutputFilePath;
 }
 
 Result<void> TokenGenerator::Generate()
 {
-    TRY(Ctx.LoadInputFile())
+    TRY(Ctx.LoadInputFile(InputFilePath))
 
-    std::println("Generating from {}", weakly_canonical(Ctx.InputFilePath).string());
-    std::println("Outputting to: {}", weakly_canonical(Ctx.OutputFilePath).string());
+    std::println("Generating from {}", weakly_canonical(InputFilePath).string());
+    std::println("Outputting to: {}", weakly_canonical(OutputFilePath).string());
     std::fflush(stdout);
 
-    TokenDefinitions.reserve(Ctx.InputFileLines.size());
+    TokenDefinitions.reserve(Ctx.Input.Lines.size());
 
     CreateSpecialTokens();
 
@@ -50,6 +49,8 @@ Result<void> TokenGenerator::Generate()
     GenerateTokenTypeEnum();
     GenerateFixedLexemeStringViews();
     GenerateLookupFunctions();
+
+    Ctx.Output.FilePath = OutputFilePath;
 
     if (auto CommitResult = Ctx.Commit(); !CommitResult.has_value())
     {
@@ -67,15 +68,15 @@ void TokenGenerator::CreateSpecialTokens()
 
 Result<void> TokenGenerator::ParseDefinitionFile()
 {
-    if (Ctx.InputFileContents.empty())
+    if (Ctx.Input.Content.empty())
     {
-        FAIL(Format("Failed to parse file {}: file is empty", weakly_canonical(Ctx.InputFilePath).string()));
+        FAIL(Format("Failed to parse file {}: file is empty", weakly_canonical(Ctx.Input.Path()).string()));
     }
 
     std::string Prefix;
     std::vector<std::string_view> Fields(2);
 
-    for (const auto& Line : Ctx.InputFileLines)
+    for (const auto& Line : Ctx.Input.Lines)
     {
         if (Line.empty())
         {
@@ -96,7 +97,7 @@ Result<void> TokenGenerator::ParseDefinitionFile()
             continue;
         }
 
-        FAIL(Format("Error parsing {}: Line `{}` is malformed", weakly_canonical(Ctx.InputFilePath).string(), Line));
+        FAIL(Format("Error parsing {}: Line `{}` is malformed", weakly_canonical(Ctx.Input.Path()).string(), Line));
     }
 
     return {};
@@ -104,40 +105,43 @@ Result<void> TokenGenerator::ParseDefinitionFile()
 
 void TokenGenerator::GenerateTokenTypeEnum()
 {
-    Ctx.AddLine(Format("enum class {}", EnumClassName))
+    Ctx.Output.AddLine(Format("enum class {}", EnumClassName))
     .AddLine("{").Indent();
 
     for (const auto& [Prefix, Lexeme, Name] : TokenDefinitions)
     {
-        Ctx.AddLine(Format("{}_{},", Prefix, Name));
+        Ctx.Output.AddLine(Format("{}_{},", Prefix, Name));
     }
 
-    Ctx.Dedent().AddLine("};").AddLine();
+    Ctx.Output.Dedent().AddLine("};").AddLine();
 }
 
 void TokenGenerator::GenerateFixedLexemeStringViews()
 {
-    Ctx.AddDependency(EDependencyType::System, "string_view");
+    Ctx.AddDependency({ Dependency::Type::System, "string_view"});
 
     for (const auto& [Prefix, Lexeme, Name] : TokenDefinitions)
     {
         if (Prefix == "Special") continue;
 
-        Ctx.AddLine(Format("static inline constexpr std::string_view {}String {{ R\"_LexStr_({})_LexStr_\" }};", Name, Lexeme));
+        Ctx.Output.AddLine(Format("static inline constexpr std::string_view {}String {{ R\"_LexStr_({})_LexStr_\" }};", Name, Lexeme));
     }
 
-    Ctx.AddLine();
+    Ctx.Output.AddLine();
 }
 
 void TokenGenerator::GenerateLookupFunctions()
 {
-    Ctx.AddDependency(EDependencyType::System, "string_view")
-       .AddDependency(EDependencyType::System,"unordered_map")
-       .AddDependency(EDependencyType::Local,"ErrorHandling.hpp");
-
+    Ctx.AddDependencies(
+        {
+            { Dependency::Type::System, "string_view" },
+            { Dependency::Type::System, "unordered_map" },
+            { Dependency::Type::Local, "ErrorHandling.hpp" },
+        }
+    );
 
     // TokenType -> Lexeme Function
-    Ctx.AddLine(Format("inline Option<std::string_view> GetLexemeForTokenType(const {} InTokenType)", EnumClassName))
+    Ctx.Output.AddLine(Format("inline Option<std::string_view> GetLexemeForTokenType(const {} InTokenType)", EnumClassName))
     .AddLine("{").Indent()
     .AddLine(Format("static const std::unordered_map<{}, std::string_view> {}", EnumClassName, TokenToLexemeTableName))
     .AddLine("{").Indent();
@@ -146,10 +150,10 @@ void TokenGenerator::GenerateLookupFunctions()
     {
         if (Prefix == "Special") continue;
 
-        Ctx.AddLine(Format("{{ {}::{}_{}, {}String }},", EnumClassName, Prefix, Name, Name));
+        Ctx.Output.AddLine(Format("{{ {}::{}_{}, {}String }},", EnumClassName, Prefix, Name, Name));
     }
 
-    Ctx.Dedent()
+    Ctx.Output.Dedent()
     .AddLine("};")
     .AddLine(Format("const auto Result = {}.find(InTokenType);", TokenToLexemeTableName))
     .AddLine(Format("return Result == {}.cend() ? None : Option {{ Result->second }};", TokenToLexemeTableName))
@@ -157,7 +161,7 @@ void TokenGenerator::GenerateLookupFunctions()
 
 
     // Lexeme -> TokenType Function
-    Ctx.AddLine(Format("inline Option<{}> GetTokenTypeForLexeme(const std::string_view InLexeme)", EnumClassName))
+    Ctx.Output.AddLine(Format("inline Option<{}> GetTokenTypeForLexeme(const std::string_view InLexeme)", EnumClassName))
     .AddLine("{").Indent()
     .AddLine(Format("static const std::unordered_map<std::string_view, {}> {} ", EnumClassName, LexemeToTokenTableName))
     .AddLine("{").Indent();
@@ -165,10 +169,10 @@ void TokenGenerator::GenerateLookupFunctions()
     for (const auto& [Prefix, Lexeme, Name] : TokenDefinitions)
     {
         if (Prefix == "Special") continue;
-        Ctx.AddLine(Format("{{ {}String, {}::{}_{} }},", Name, EnumClassName, Prefix, Name));
+        Ctx.Output.AddLine(Format("{{ {}String, {}::{}_{} }},", Name, EnumClassName, Prefix, Name));
     }
 
-    Ctx.Dedent()
+    Ctx.Output.Dedent()
     .AddLine("};")
     .AddLine(Format("const auto Result = {}.find(InLexeme);", LexemeToTokenTableName))
     .AddLine(Format("return Result == {}.cend() ? None : Option {{ Result->second }};", LexemeToTokenTableName))
