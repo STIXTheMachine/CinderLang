@@ -11,7 +11,7 @@
 struct InputFile
 {
     [[nodiscard]] Result<void> Load(const std::filesystem::path&);
-    [[nodiscard]] const std::filesystem::path& Path() { return FilePath; }
+    [[nodiscard]] const std::filesystem::path& Path() const { return FilePath; }
     void Reset();
 
     std::string_view Content {};

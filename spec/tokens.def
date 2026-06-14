@@ -78,7 +78,7 @@ $ Dollar
 ?? DoubleQuestion
 >> DoubleGreater
 << DoubleLess
-: DoubleColon
+:: DoubleColon
 != BangEqual
 |= PipeEqual
 &= AmpEqual

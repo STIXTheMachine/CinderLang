@@ -9,21 +9,6 @@
 #include <iostream>
 #include <print>
 
-namespace
-{
-    constexpr auto FormatBufferSize = 1024;
-    char LineFormatBuffer[FormatBufferSize];
-
-    template<typename... FmtArgs>
-    const char* Format(std::format_string<FmtArgs...> FormatString, FmtArgs&&... Args)
-    {
-        auto Result = std::format_to_n(LineFormatBuffer, FormatBufferSize, FormatString, std::forward<FmtArgs>(Args)...);
-        *Result.out = '\0';
-        return LineFormatBuffer;
-    }
-}
-
-
 TokenGenerator::TokenGenerator(
     const std::filesystem::path& InputFilePath,
     const std::filesystem::path& OutputFilePath
@@ -70,7 +55,7 @@ Result<void> TokenGenerator::ParseDefinitionFile()
 {
     if (Ctx.Input.Content.empty())
     {
-        FAIL(Format("Failed to parse file {}: file is empty", weakly_canonical(Ctx.Input.Path()).string()));
+        FAIL(std::format("Failed to parse file {}: file is empty", weakly_canonical(Ctx.Input.Path()).string()));
     }
 
     std::string Prefix;
@@ -97,7 +82,7 @@ Result<void> TokenGenerator::ParseDefinitionFile()
             continue;
         }
 
-        FAIL(Format("Error parsing {}: Line `{}` is malformed", weakly_canonical(Ctx.Input.Path()).string(), Line));
+        FAIL(std::format("Error parsing {}: Line `{}` is malformed", weakly_canonical(Ctx.Input.Path()).string(), Line));
     }
 
     return {};
@@ -105,12 +90,12 @@ Result<void> TokenGenerator::ParseDefinitionFile()
 
 void TokenGenerator::GenerateTokenTypeEnum()
 {
-    Ctx.Output.AddLine(Format("enum class {}", EnumClassName))
+    Ctx.Output.AddLine(std::format("enum class {}", EnumClassName))
     .AddLine("{").Indent();
 
     for (const auto& [Prefix, Lexeme, Name] : TokenDefinitions)
     {
-        Ctx.Output.AddLine(Format("{}_{},", Prefix, Name));
+        Ctx.Output.AddLine(std::format("{}_{},", Prefix, Name));
     }
 
     Ctx.Output.Dedent().AddLine("};").AddLine();
@@ -124,7 +109,7 @@ void TokenGenerator::GenerateFixedLexemeStringViews()
     {
         if (Prefix == "Special") continue;
 
-        Ctx.Output.AddLine(Format("static inline constexpr std::string_view {}String {{ R\"_LexStr_({})_LexStr_\" }};", Name, Lexeme));
+        Ctx.Output.AddLine(std::format("static inline constexpr std::string_view {}String {{ R\"_LexStr_({})_LexStr_\" }};", Name, Lexeme));
     }
 
     Ctx.Output.AddLine();
@@ -141,40 +126,40 @@ void TokenGenerator::GenerateLookupFunctions()
     );
 
     // TokenType -> Lexeme Function
-    Ctx.Output.AddLine(Format("inline Option<std::string_view> GetLexemeForTokenType(const {} InTokenType)", EnumClassName))
+    Ctx.Output.AddLine(std::format("inline Option<std::string_view> GetLexemeForTokenType(const {} InTokenType)", EnumClassName))
     .AddLine("{").Indent()
-    .AddLine(Format("static const std::unordered_map<{}, std::string_view> {}", EnumClassName, TokenToLexemeTableName))
+    .AddLine(std::format("static const std::unordered_map<{}, std::string_view> {}", EnumClassName, TokenToLexemeTableName))
     .AddLine("{").Indent();
 
     for (const auto& [Prefix, Lexeme, Name] : TokenDefinitions)
     {
         if (Prefix == "Special") continue;
 
-        Ctx.Output.AddLine(Format("{{ {}::{}_{}, {}String }},", EnumClassName, Prefix, Name, Name));
+        Ctx.Output.AddLine(std::format("{{ {}::{}_{}, {}String }},", EnumClassName, Prefix, Name, Name));
     }
 
     Ctx.Output.Dedent()
     .AddLine("};")
-    .AddLine(Format("const auto Result = {}.find(InTokenType);", TokenToLexemeTableName))
-    .AddLine(Format("return Result == {}.cend() ? None : Option {{ Result->second }};", TokenToLexemeTableName))
+    .AddLine(std::format("const auto Result = {}.find(InTokenType);", TokenToLexemeTableName))
+    .AddLine(std::format("return Result == {}.cend() ? None : Option {{ Result->second }};", TokenToLexemeTableName))
     .Dedent().AddLine("}").AddLine();
 
 
     // Lexeme -> TokenType Function
-    Ctx.Output.AddLine(Format("inline Option<{}> GetTokenTypeForLexeme(const std::string_view InLexeme)", EnumClassName))
+    Ctx.Output.AddLine(std::format("inline Option<{}> GetTokenTypeForLexeme(const std::string_view InLexeme)", EnumClassName))
     .AddLine("{").Indent()
-    .AddLine(Format("static const std::unordered_map<std::string_view, {}> {} ", EnumClassName, LexemeToTokenTableName))
+    .AddLine(std::format("static const std::unordered_map<std::string_view, {}> {} ", EnumClassName, LexemeToTokenTableName))
     .AddLine("{").Indent();
 
     for (const auto& [Prefix, Lexeme, Name] : TokenDefinitions)
     {
         if (Prefix == "Special") continue;
-        Ctx.Output.AddLine(Format("{{ {}String, {}::{}_{} }},", Name, EnumClassName, Prefix, Name));
+        Ctx.Output.AddLine(std::format("{{ {}String, {}::{}_{} }},", Name, EnumClassName, Prefix, Name));
     }
 
     Ctx.Output.Dedent()
     .AddLine("};")
-    .AddLine(Format("const auto Result = {}.find(InLexeme);", LexemeToTokenTableName))
-    .AddLine(Format("return Result == {}.cend() ? None : Option {{ Result->second }};", LexemeToTokenTableName))
+    .AddLine(std::format("const auto Result = {}.find(InLexeme);", LexemeToTokenTableName))
+    .AddLine(std::format("return Result == {}.cend() ? None : Option {{ Result->second }};", LexemeToTokenTableName))
     .Dedent().AddLine("}").AddLine();
 }
