@@ -1,5 +1,5 @@
 @Keyword
-fn DefFunc
+func DefFunc
 proc DefProc
 return Return
 switch Switch
@@ -9,6 +9,8 @@ else Else
 loop Loop
 continue Continue
 break Break
+try Try
+fail Fail
 
 @Typename
 u8 Unsigned8
@@ -58,7 +60,7 @@ $ Dollar
 / ForwardSlash
 \ BackSlash
 | Pipe
- Colon
+: Colon
 ; Semicolon
 , Comma
 . Period

@@ -5,7 +5,10 @@
 #include "Utils.hpp"
 #include <fstream>
 
-std::vector<std::string_view> Utils::Split(const std::string_view& String, char Char)
+namespace Utils
+{
+
+std::vector<std::string_view> Split(const std::string_view& String, const char Char)
 {
     if (String.empty()) return std::vector<std::string_view> {};
 
@@ -25,13 +28,15 @@ std::vector<std::string_view> Utils::Split(const std::string_view& String, char 
     return Output;
 }
 
-std::string Utils::ReadFileToString(std::ifstream& FileStream)
+std::string ReadFileToString(std::ifstream& FileStream)
 {
     return std::string { std::istreambuf_iterator { FileStream }, { } };
 }
 
-std::string Utils::ReadFileToString(const std::filesystem::path& Path)
+std::string ReadFileToString(const std::filesystem::path& Path)
 {
     std::ifstream FileStream { Path };
     return ReadFileToString(FileStream);
+}
+
 }
